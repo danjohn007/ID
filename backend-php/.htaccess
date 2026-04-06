@@ -1,0 +1,48 @@
+RewriteEngine On
+
+# ── Prevent Apache from adding trailing slashes (causes 301 on POST) ──
+DirectorySlash Off
+
+# ── Pass Authorization header to PHP (required on shared hosting) ──
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# ── API Routes (with and without trailing slash) ──
+
+# Health check
+RewriteRule ^api/health/?$ api/health.php [L,QSA]
+
+# Auth
+RewriteRule ^api/auth/login/?$ api/auth/login.php [L,QSA]
+
+# Works - single item (must come before the collection rule)
+RewriteRule ^api/works/([0-9]+)/?$ api/works/single.php?id=$1 [L,QSA]
+
+# Works - collection
+RewriteRule ^api/works/?$ api/works/index.php [L,QSA]
+
+# Users - public works endpoint (must come before the collection rule)
+RewriteRule ^api/users/works/?$ api/users/works.php [L,QSA]
+
+# Users - collection
+RewriteRule ^api/users/?$ api/users/index.php [L,QSA]
+
+# ── Deny access to config files ──
+<FilesMatch "\.(php)$">
+    # Allow only api/ folder PHP files
+</FilesMatch>
+
+<Files "config.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+<Files "helpers.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+<Files "jwt.php">
+    Order Allow,Deny
+    Deny from all
+</Files>

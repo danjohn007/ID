@@ -86,18 +86,42 @@
 .file-drop-zone {
   border: 2px dashed #d1d5db;
   border-radius: 10px;
-  min-height: 160px;
+  min-height: 120px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   transition: border-color 0.2s;
   background: #f9fafb;
   overflow: hidden;
   position: relative;
+  cursor: pointer;
+  gap: 0.4rem;
+  padding: 1rem;
 }
 
 .file-drop-zone:hover {
   border-color: #3b82f6;
+}
+
+.file-drop-zone span:first-child {
+  font-size: 1.8rem;
+}
+
+.file-drop-zone span:nth-child(2) {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.images-grid .add-more {
+  min-height: 140px;
 }
 
 .file-label {
@@ -113,16 +137,6 @@
   text-align: center;
 }
 
-.file-label span:first-child {
-  font-size: 2rem;
-}
-
-.file-label span:nth-child(2) {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #374151;
-}
-
 .file-hint {
   font-size: 0.75rem !important;
   color: #9ca3af !important;
@@ -136,19 +150,18 @@
 .preview-wrapper {
   position: relative;
   width: 100%;
-  height: 160px;
+  height: 140px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.preview-wrapper.small {
+  border: 2px solid #e5e7eb;
 }
 
 .preview-img {
   width: 100%;
-  height: 160px;
-  object-fit: cover;
-  display: block;
-}
-
-.preview-video {
-  width: 100%;
-  height: 160px;
+  height: 140px;
   object-fit: cover;
   display: block;
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useAuth } from '../context/AuthContext';
+import WorkDetail from './WorkDetail';
 import './Portfolio.css';
 
 export default function Portfolio() {
@@ -8,13 +9,14 @@ export default function Portfolio() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState(null);
+  const [selectedWork, setSelectedWork] = useState(null);
   const { token } = useAuth();
 
   const fetchWorks = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const res = await axios.get('/api/works', {
+      const res = await api.get('/api/works', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setWorks(res.data.works || []);
@@ -29,11 +31,12 @@ export default function Portfolio() {
     fetchWorks();
   }, [fetchWorks]);
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
     if (!window.confirm('Are you sure you want to delete this work?')) return;
     try {
       setDeletingId(id);
-      await axios.delete(`/api/works/${id}`, {
+      await api.delete(`/api/works/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setWorks((prev) => prev.filter((w) => w.id !== id));
@@ -72,48 +75,55 @@ export default function Portfolio() {
     );
   }
 
+  const getCoverImage = (work) => {
+    if (work.images && work.images.length > 0) return work.images[0].image_url;
+    return null;
+  };
+
   return (
-    <div className="portfolio-grid">
-      {works.map((work) => (
-        <div key={work.id} className="work-card">
-          <div className="work-media">
-            {work.video_url ? (
-              <video
-                src={work.video_url}
-                controls
-                className="work-video"
-                poster={work.image_url || undefined}
-              />
-            ) : work.image_url ? (
-              <img src={work.image_url} alt={work.name} className="work-image" />
-            ) : (
-              <div className="work-no-media">📄</div>
-            )}
-          </div>
-          <div className="work-info">
-            <h3 className="work-name">{work.name}</h3>
-            {work.description && (
-              <p className="work-description">{work.description}</p>
-            )}
-            <div className="work-meta">
-              <span className="work-date">
-                {new Date(work.created_at).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </span>
-              <button
-                className="delete-btn"
-                onClick={() => handleDelete(work.id)}
-                disabled={deletingId === work.id}
-              >
-                {deletingId === work.id ? 'Deleting…' : '🗑️ Delete'}
-              </button>
+    <>
+      <div className="portfolio-grid">
+        {works.map((work) => (
+          <div key={work.id} className="work-card" onClick={() => setSelectedWork(work)}>
+            <div className="work-media">
+              {getCoverImage(work) ? (
+                <img src={getCoverImage(work)} alt={work.name} className="work-image" />
+              ) : (
+                <div className="work-no-media">📄</div>
+              )}
+              {work.images && work.images.length > 1 && (
+                <span className="work-img-count">📷 {work.images.length}</span>
+              )}
+            </div>
+            <div className="work-info">
+              <h3 className="work-name">{work.name}</h3>
+              {work.description && (
+                <p className="work-description">{work.description}</p>
+              )}
+              <div className="work-meta">
+                <span className="work-date">
+                  {new Date(work.created_at).toLocaleDateString('es-MX', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </span>
+                <button
+                  className="delete-btn"
+                  onClick={(e) => handleDelete(e, work.id)}
+                  disabled={deletingId === work.id}
+                >
+                  {deletingId === work.id ? 'Deleting…' : '🗑️ Delete'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+
+      {selectedWork && (
+        <WorkDetail work={selectedWork} onClose={() => setSelectedWork(null)} />
+      )}
+    </>
   );
 }

@@ -1,8 +1,8 @@
 -- Portfolio Dashboard Database Schema
 -- Run this script to initialize the database
 
-CREATE DATABASE IF NOT EXISTS portfolio_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE portfolio_db;
+CREATE DATABASE IF NOT EXISTS idactivo_idbot CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE idactivo_idbot;
 
 -- Admin table for dashboard login
 CREATE TABLE IF NOT EXISTS admins (
@@ -17,9 +17,17 @@ CREATE TABLE IF NOT EXISTS works (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    image_url VARCHAR(500),
-    video_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Work images table (multiple images per work)
+CREATE TABLE IF NOT EXISTS work_images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    work_id INT NOT NULL,
+    image_url VARCHAR(500) NOT NULL,
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (work_id) REFERENCES works(id) ON DELETE CASCADE
 );
 
 -- Users table (for future chatbot integration)
