@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Trash2, ImageIcon, Calendar, AlertCircle, RefreshCw, FileText } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import WorkDetail from './WorkDetail';
@@ -59,9 +60,12 @@ export default function Portfolio() {
   if (error) {
     return (
       <div className="portfolio-state error">
-        <span>⚠️</span>
+        <AlertCircle size={32} />
         <p>{error}</p>
-        <button className="retry-btn" onClick={fetchWorks}>Retry</button>
+        <button className="retry-btn" onClick={fetchWorks}>
+          <RefreshCw size={15} />
+          Retry
+        </button>
       </div>
     );
   }
@@ -69,7 +73,7 @@ export default function Portfolio() {
   if (works.length === 0) {
     return (
       <div className="portfolio-state empty">
-        <span>📂</span>
+        <ImageIcon size={40} />
         <p>No works yet. Start by uploading your first project!</p>
       </div>
     );
@@ -89,10 +93,17 @@ export default function Portfolio() {
               {getCoverImage(work) ? (
                 <img src={getCoverImage(work)} alt={work.name} className="work-image" />
               ) : (
-                <div className="work-no-media">📄</div>
+                <div className="work-no-media"><ImageIcon size={32} /></div>
               )}
               {work.images && work.images.length > 1 && (
-                <span className="work-img-count">📷 {work.images.length}</span>
+                <span className="work-img-count">
+                  <ImageIcon size={12} /> {work.images.length}
+                </span>
+              )}
+              {work.pdf_url && (
+                <span className="work-pdf-badge">
+                  <FileText size={12} /> PDF
+                </span>
               )}
             </div>
             <div className="work-info">
@@ -102,6 +113,7 @@ export default function Portfolio() {
               )}
               <div className="work-meta">
                 <span className="work-date">
+                  <Calendar size={13} />
                   {new Date(work.created_at).toLocaleDateString('es-MX', {
                     year: 'numeric',
                     month: 'short',
@@ -113,7 +125,8 @@ export default function Portfolio() {
                   onClick={(e) => handleDelete(e, work.id)}
                   disabled={deletingId === work.id}
                 >
-                  {deletingId === work.id ? 'Deleting…' : '🗑️ Delete'}
+                  <Trash2 size={14} />
+                  {deletingId === work.id ? 'Deleting…' : 'Delete'}
                 </button>
               </div>
             </div>

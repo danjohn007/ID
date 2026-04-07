@@ -15,13 +15,14 @@ if ($method === 'POST') {
     $name    = trim($body['name'] ?? '');
     $company = trim($body['company'] ?? '');
     $email   = trim($body['email'] ?? '');
+    $event   = trim($body['event'] ?? '');
 
     if ($name === '' || $email === '') {
         json_response(['success' => false, 'message' => 'Name and email are required'], 400);
     }
 
-    $stmt = $db->prepare('INSERT INTO users (name, company, email) VALUES (?, ?, ?)');
-    $stmt->execute([$name, $company ?: null, $email]);
+    $stmt = $db->prepare('INSERT INTO users (name, company, email, event) VALUES (?, ?, ?, ?)');
+    $stmt->execute([$name, $company ?: null, $email, $event ?: null]);
 
     json_response([
         'success' => true,
@@ -32,7 +33,7 @@ if ($method === 'POST') {
 } elseif ($method === 'GET') {
     // ── List chatbot users (admin only) ──
     require_auth();
-    $rows = $db->query('SELECT * FROM users ORDER BY created_at DESC')->fetchAll();
+    $rows = $db->query('SELECT id, phone, name, company, email, event_name FROM users ORDER BY created_at DESC')->fetchAll();
     json_response(['success' => true, 'users' => $rows]);
 
 } else {

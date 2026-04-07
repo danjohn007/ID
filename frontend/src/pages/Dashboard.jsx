@@ -1,12 +1,30 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Images, Upload, Users as UsersIcon, LogOut, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import idLogo from '../../images/IDlogo.png';
+import Stats from '../components/Stats';
 import Portfolio from '../components/Portfolio';
 import UploadWork from '../components/UploadWork';
+import UsersList from '../components/Users';
 import './Dashboard.css';
 
+const NAV_ITEMS = [
+  { key: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { key: 'portfolio', label: 'Portfolio', icon: Images },
+  { key: 'upload', label: 'Upload Work', icon: Upload },
+  { key: 'users', label: 'Users', icon: UsersIcon },
+];
+
+const SECTION_META = {
+  overview:  { title: 'Overview',         subtitle: 'Dashboard summary and quick stats' },
+  portfolio: { title: 'Portfolio',         subtitle: 'View and manage your work portfolio' },
+  upload:    { title: 'Upload New Work',   subtitle: 'Add a new project to your portfolio' },
+  users:     { title: 'Users',            subtitle: 'View registered users and their companies' },
+};
+
 export default function Dashboard() {
-  const [activeSection, setActiveSection] = useState('portfolio');
+  const [activeSection, setActiveSection] = useState('overview');
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -15,39 +33,49 @@ export default function Dashboard() {
     navigate('/login');
   };
 
+  const meta = SECTION_META[activeSection];
+
   return (
     <div className="dashboard">
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
-          <span className="sidebar-icon">🎨</span>
-          <h2>Portfolio</h2>
+          <div className="sidebar-logo">
+            <img src={idLogo} alt="Impactos Digitales" className="sidebar-logo-img" />
+          </div>
+          <div>
+            <h2>Impactos Digitales</h2>
+            <span className="sidebar-tagline">Admin Panel</span>
+          </div>
         </div>
 
         <nav className="sidebar-nav">
-          <button
-            className={`nav-item ${activeSection === 'portfolio' ? 'active' : ''}`}
-            onClick={() => setActiveSection('portfolio')}
-          >
-            <span className="nav-icon">🖼️</span>
-            <span>Portfolio</span>
-          </button>
-          <button
-            className={`nav-item ${activeSection === 'upload' ? 'active' : ''}`}
-            onClick={() => setActiveSection('upload')}
-          >
-            <span className="nav-icon">⬆️</span>
-            <span>Upload Work</span>
-          </button>
+          {NAV_ITEMS.map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              className={`nav-item ${activeSection === key ? 'active' : ''}`}
+              onClick={() => setActiveSection(key)}
+            >
+              <Icon size={19} strokeWidth={activeSection === key ? 2.2 : 1.8} />
+              <span>{label}</span>
+              {activeSection === key && <ChevronRight size={15} className="nav-arrow" />}
+            </button>
+          ))}
         </nav>
 
         <div className="sidebar-footer">
           <div className="admin-info">
-            <span className="admin-avatar">👤</span>
-            <span className="admin-name">{admin?.username}</span>
+            <div className="admin-avatar">
+              {admin?.username?.charAt(0).toUpperCase()}
+            </div>
+            <div className="admin-details">
+              <span className="admin-name">{admin?.username}</span>
+              <span className="admin-role">Administrator</span>
+            </div>
           </div>
           <button className="logout-btn" onClick={handleLogout}>
-            <span>🚪</span> Logout
+            <LogOut size={17} />
+            <span>Log out</span>
           </button>
         </div>
       </aside>
@@ -55,20 +83,19 @@ export default function Dashboard() {
       {/* Main content */}
       <main className="main-content">
         <header className="content-header">
-          <h1>{activeSection === 'portfolio' ? '📁 My Portfolio' : '⬆️ Upload New Work'}</h1>
-          <p className="header-subtitle">
-            {activeSection === 'portfolio'
-              ? 'View and manage your work portfolio'
-              : 'Add a new project to your portfolio'}
-          </p>
+          <div>
+            <h1>{meta.title}</h1>
+            <p className="header-subtitle">{meta.subtitle}</p>
+          </div>
         </header>
 
         <div className="content-body">
-          {activeSection === 'portfolio' ? (
-            <Portfolio />
-          ) : (
+          {activeSection === 'overview' && <Stats onNavigate={setActiveSection} />}
+          {activeSection === 'portfolio' && <Portfolio />}
+          {activeSection === 'upload' && (
             <UploadWork onSuccess={() => setActiveSection('portfolio')} />
           )}
+          {activeSection === 'users' && <UsersList />}
         </div>
       </main>
     </div>

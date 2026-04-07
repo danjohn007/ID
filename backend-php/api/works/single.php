@@ -45,6 +45,12 @@ if ($method === 'GET') {
         json_response(['success' => false, 'message' => 'Work not found'], 404);
     }
 
+    // Remove PDF file if exists
+    if (!empty($work['pdf_url'])) {
+        $pdfFile = $uploadDir . '/' . basename($work['pdf_url']);
+        if (file_exists($pdfFile)) unlink($pdfFile);
+    }
+
     // Remove associated image files
     $uploadDir = __DIR__ . '/../../uploads';
     $stmtImg = $db->prepare('SELECT image_url FROM work_images WHERE work_id = ?');

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ImagePlus, X, CheckCircle, AlertCircle, RotateCcw, Upload, FileText } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import './UploadWork.css';
@@ -8,6 +9,7 @@ export default function UploadWork({ onSuccess }) {
   const [description, setDescription] = useState('');
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [pdfFile, setPdfFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -39,6 +41,7 @@ export default function UploadWork({ onSuccess }) {
     imagePreviews.forEach((url) => url && URL.revokeObjectURL(url));
     setImageFiles([]);
     setImagePreviews([]);
+    setPdfFile(null);
     setError('');
   };
 
@@ -57,6 +60,9 @@ export default function UploadWork({ onSuccess }) {
       const formData = new FormData();
       formData.append('name', name.trim());
       formData.append('description', description.trim());
+      if (pdfFile) {
+        formData.append('pdf', pdfFile);
+      }
       imageFiles.forEach((file) => {
         formData.append('images[]', file);
       });
@@ -85,10 +91,16 @@ export default function UploadWork({ onSuccess }) {
       <div className="upload-card">
         {success && (
           <div className="upload-success">
-            ✅ Work uploaded successfully! Redirecting to portfolio…
+            <CheckCircle size={18} />
+            <span>Work uploaded successfully! Redirecting to portfolio…</span>
           </div>
         )}
-        {error && <div className="upload-error">⚠️ {error}</div>}
+        {error && (
+          <div className="upload-error">
+            <AlertCircle size={18} />
+            <span>{error}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="upload-form">
           <div className="form-row">
@@ -124,11 +136,13 @@ export default function UploadWork({ onSuccess }) {
               {imagePreviews.map((preview, idx) => (
                 <div key={idx} className="preview-wrapper small">
                   <img src={preview} alt={`Preview ${idx + 1}`} className="preview-img" />
-                  <button type="button" className="remove-preview" onClick={() => removeImage(idx)}>✕</button>
+                  <button type="button" className="remove-preview" onClick={() => removeImage(idx)}>
+                    <X size={14} />
+                  </button>
                 </div>
               ))}
               <label htmlFor="images-input" className="file-drop-zone add-more">
-                <span>🖼️</span>
+                <ImagePlus size={24} />
                 <span>{imageFiles.length === 0 ? 'Click to upload images' : '+ Add more'}</span>
                 <span className="file-hint">JPG, PNG, GIF, WEBP</span>
               </label>
@@ -143,12 +157,49 @@ export default function UploadWork({ onSuccess }) {
             />
           </div>
 
+          <div className="form-group">
+            <label>PDF Portfolio</label>
+            {pdfFile ? (
+              <div className="pdf-selected">
+                <FileText size={18} />
+                <span className="pdf-name">{pdfFile.name}</span>
+                <button type="button" className="remove-pdf" onClick={() => setPdfFile(null)}>
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <label htmlFor="pdf-input" className="file-drop-zone pdf-zone">
+                <FileText size={24} />
+                <span>Click to upload a PDF</span>
+                <span className="file-hint">PDF up to 100 MB</span>
+              </label>
+            )}
+            <input
+              id="pdf-input"
+              type="file"
+              accept=".pdf,application/pdf"
+              onChange={(e) => {
+                if (e.target.files[0]) setPdfFile(e.target.files[0]);
+                e.target.value = '';
+              }}
+              className="hidden-input"
+            />
+          </div>
+
           <div className="form-actions">
             <button type="button" className="cancel-btn" onClick={resetForm}>
+              <RotateCcw size={15} />
               Clear Form
             </button>
             <button type="submit" className="submit-btn" disabled={loading}>
-              {loading ? 'Uploading…' : '⬆️ Upload Work'}
+              {loading ? (
+                <div className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} />
+              ) : (
+                <>
+                  <Upload size={16} />
+                  Upload Work
+                </>
+              )}
             </button>
           </div>
         </form>

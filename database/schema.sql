@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS works (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
+    pdf_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -33,9 +34,13 @@ CREATE TABLE IF NOT EXISTS work_images (
 -- Users table (for future chatbot integration)
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    phone VARCHAR(20) UNIQUE,
     name VARCHAR(255) NOT NULL,
     company VARCHAR(255),
     email VARCHAR(255) NOT NULL,
+    event_name VARCHAR(255),
+    chosen_option VARCHAR(10),
+    state VARCHAR(50) NOT NULL DEFAULT 'WAITING_NAME',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

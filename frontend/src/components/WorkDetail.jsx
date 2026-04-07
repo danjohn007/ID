@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { X, ChevronLeft, ChevronRight, ImageIcon, Calendar, FileText } from 'lucide-react';
 import './WorkDetail.css';
 
 export default function WorkDetail({ work, onClose }) {
@@ -11,7 +12,9 @@ export default function WorkDetail({ work, onClose }) {
   return (
     <div className="detail-overlay" onClick={onClose}>
       <div className="detail-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="detail-close" onClick={onClose}>✕</button>
+        <button className="detail-close" onClick={onClose}>
+          <X size={18} />
+        </button>
 
         {/* Image gallery */}
         {images.length > 0 ? (
@@ -23,14 +26,21 @@ export default function WorkDetail({ work, onClose }) {
             />
             {images.length > 1 && (
               <>
-                <button className="gallery-arrow left" onClick={prevImg}>‹</button>
-                <button className="gallery-arrow right" onClick={nextImg}>›</button>
+                <button className="gallery-arrow left" onClick={prevImg}>
+                  <ChevronLeft size={24} />
+                </button>
+                <button className="gallery-arrow right" onClick={nextImg}>
+                  <ChevronRight size={24} />
+                </button>
                 <div className="gallery-counter">{currentImg + 1} / {images.length}</div>
               </>
             )}
           </div>
         ) : (
-          <div className="detail-no-img">📄 No images</div>
+          <div className="detail-no-img">
+            <ImageIcon size={40} />
+            <span>No images</span>
+          </div>
         )}
 
         {/* Thumbnails */}
@@ -52,12 +62,24 @@ export default function WorkDetail({ work, onClose }) {
         <div className="detail-info">
           <h2 className="detail-name">{work.name}</h2>
           <span className="detail-date">
+            <Calendar size={14} />
             {new Date(work.created_at).toLocaleDateString('es-MX', {
               year: 'numeric', month: 'long', day: 'numeric',
             })}
           </span>
           {work.description && (
             <p className="detail-description">{work.description}</p>
+          )}
+          {work.pdf_url && (
+            <a
+              href={work.pdf_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="detail-pdf-btn"
+            >
+              <FileText size={16} />
+              View PDF Portfolio
+            </a>
           )}
         </div>
       </div>

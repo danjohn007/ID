@@ -45,6 +45,7 @@ if ($method === 'GET') {
     }
 
     $allowedImage = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $allowedPdf   = ['application/pdf'];
     $maxSize = 100 * 1024 * 1024; // 100 MB
 
     // Insert the work first
@@ -52,6 +53,19 @@ if ($method === 'GET') {
     $stmt = $db->prepare('INSERT INTO works (name, description) VALUES (?, ?)');
     $stmt->execute([$name, $description ?: null]);
     $workId = $db->lastInsertId();
+
+    // Handle PDF upload (field name: pdf)
+    $pdfUrl = null;
+    if (isset($_FILES['pdf']) && $_FILES['pdf']['error'] === UPLOAD_ERR_OK) {
+        $pdf = $_FILES['pdf'];
+        if (in_array($pdf['type'], $allowedPdf) && $pdf['size'] <= $maxSize) {
+            $pdfName = 'pdf-' . $workId . '-' . time() . '-' . mt_rand(100000, 999999) . '.pdf';
+            if (move_uploaded_file($pdf['tmp_name'], "$uploadDir/$pdfName")) {
+                $pdfUrl = BASE_URL . '/uploads/' . $pdfName;
+                $db->prepare('UPDATE works SET pdf_url = ? WHERE id = ?')->execute([$pdfUrl, $workId]);
+            }
+        }
+    }
 
     // Handle multiple image uploads (field name: images[])
     $uploadedImages = [];
@@ -88,6 +102,7 @@ if ($method === 'GET') {
     $stmt->execute([$workId]);
     $work = $stmt->fetch();
     $work['images'] = $uploadedImages;
+    $work['pdf_url'] = $pdfUrl;
 
     json_response(['success' => true, 'message' => 'Work created', 'work' => $work], 201);
 
