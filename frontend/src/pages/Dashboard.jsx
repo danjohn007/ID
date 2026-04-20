@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Images, Upload, Users as UsersIcon, LogOut, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Images, Upload, Users as UsersIcon, CalendarDays, LogOut, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import idLogo from '../../images/IDlogo.png';
 import Stats from '../components/Stats';
 import Portfolio from '../components/Portfolio';
 import UploadWork from '../components/UploadWork';
 import UsersList from '../components/Users';
+import Appointments from '../components/Appointments';
 import './Dashboard.css';
 
 const NAV_ITEMS = [
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
   { key: 'portfolio', label: 'Portfolio', icon: Images },
   { key: 'upload', label: 'Upload Work', icon: Upload },
   { key: 'users', label: 'Users', icon: UsersIcon },
+  { key: 'appointments', label: 'Citas', icon: CalendarDays },
 ];
 
 const SECTION_META = {
@@ -21,6 +23,7 @@ const SECTION_META = {
   portfolio: { title: 'Portfolio',         subtitle: 'View and manage your work portfolio' },
   upload:    { title: 'Upload New Work',   subtitle: 'Add a new project to your portfolio' },
   users:     { title: 'Users',            subtitle: 'View registered users and their companies' },
+  appointments: { title: 'Citas', subtitle: 'Revisa reuniones agendadas con su detalle completo' },
 };
 
 export default function Dashboard() {
@@ -96,6 +99,7 @@ export default function Dashboard() {
             <UploadWork onSuccess={() => setActiveSection('portfolio')} />
           )}
           {activeSection === 'users' && <UsersList />}
+          {activeSection === 'appointments' && <Appointments />}
         </div>
       </main>
     </div>

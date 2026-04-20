@@ -48,6 +48,11 @@ export default function Portfolio() {
     }
   };
 
+  const handleWorkUpdated = (updatedWork) => {
+    setWorks((prev) => prev.map((w) => (w.id === updatedWork.id ? updatedWork : w)));
+    setSelectedWork(updatedWork);
+  };
+
   if (loading) {
     return (
       <div className="portfolio-state">
@@ -135,7 +140,11 @@ export default function Portfolio() {
       </div>
 
       {selectedWork && (
-        <WorkDetail work={selectedWork} onClose={() => setSelectedWork(null)} />
+        <WorkDetail
+          work={selectedWork}
+          onClose={() => setSelectedWork(null)}
+          onUpdated={handleWorkUpdated}
+        />
       )}
     </>
   );

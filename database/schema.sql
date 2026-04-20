@@ -44,6 +44,26 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Appointments table
+CREATE TABLE IF NOT EXISTS appointments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    name VARCHAR(255) DEFAULT NULL,
+    email VARCHAR(255) DEFAULT NULL,
+    company VARCHAR(255) DEFAULT NULL,
+    event_name VARCHAR(255) DEFAULT NULL,
+    interest VARCHAR(255) NOT NULL,
+    mode VARCHAR(20) NOT NULL DEFAULT 'PRESENCIAL',
+    appointment_at DATETIME NOT NULL,
+    meeting_link VARCHAR(500) DEFAULT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'SCHEDULED',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_appointments_date (appointment_at),
+    INDEX idx_appointments_user (user_id),
+    CONSTRAINT fk_appointments_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Insert default admin (username: admin, password: admin123)
 -- Password is hashed with bcrypt (cost factor 10)
 INSERT INTO admins (username, password) VALUES

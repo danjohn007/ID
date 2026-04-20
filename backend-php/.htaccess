@@ -27,6 +27,12 @@ RewriteRule ^api/users/works/?$ api/users/works.php [L,QSA]
 # Users - collection
 RewriteRule ^api/users/?$ api/users/index.php [L,QSA]
 
+# Appointments - single detail
+RewriteRule ^api/appointments/single/?$ api/appointments/single.php [L,QSA]
+
+# Appointments - collection
+RewriteRule ^api/appointments/?$ api/appointments/index.php [L,QSA]
+
 # ── Deny access to config files ──
 <FilesMatch "\.(php)$">
     # Allow only api/ folder PHP files
