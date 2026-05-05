@@ -12,10 +12,18 @@ import {
   FileText,
   Link as LinkIcon,
   Monitor,
+  Copy,
+  Check,
+  ExternalLink,
+  Send,
+  Search,
+  FileDown,
+  StickyNote,
   X,
 } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from './Toast';
 import './Appointments.css';
 
 const WEEK_DAYS = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
@@ -85,6 +93,20 @@ function getModeLabel(mode, meetingLink) {
   return normalized ? normalized.charAt(0) + normalized.slice(1).toLowerCase() : 'Presencial';
 }
 
+const STATUS_LABELS = {
+  SCHEDULED: 'Programada',
+  COMPLETED: 'Completada',
+  CANCELLED: 'Cancelada',
+  NO_SHOW: 'No asistió',
+};
+
+const STATUS_OPTIONS = [
+  { value: 'SCHEDULED', label: 'Programada' },
+  { value: 'COMPLETED', label: 'Completada' },
+  { value: 'CANCELLED', label: 'Cancelada' },
+  { value: 'NO_SHOW', label: 'No asistió' },
+];
+
 export default function Appointments() {
   const { token } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
@@ -95,6 +117,14 @@ export default function Appointments() {
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState('');
+  const [linkInput, setLinkInput] = useState('');
+  const [savingLink, setSavingLink] = useState(false);
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [search, setSearch] = useState('');
+  const [notesInput, setNotesInput] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
+  const showToast = useToast();
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -196,6 +226,114 @@ export default function Appointments() {
     }
   };
 
+  useEffect(() => {
+    setLinkInput(selectedAppointment?.meeting_link || '');
+    setNotesInput(selectedAppointment?.notes || '');
+    setCopied(false);
+  }, [selectedAppointment?.id]);
+
+  const handleStatusChange = async (newStatus) => {
+    if (!selectedAppointment?.id || statusSaving) return;
+    try {
+      setStatusSaving(true);
+      await api.patch(
+        '/api/appointments/single',
+        { id: selectedAppointment.id, status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setSelectedAppointment((prev) => ({ ...prev, status: newStatus }));
+      setAppointments((prev) =>
+        prev.map((a) => (a.id === selectedAppointment.id ? { ...a, status: newStatus } : a)),
+      );
+      showToast('Estatus actualizado');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'No se pudo actualizar el estatus.', 'error');
+    } finally {
+      setStatusSaving(false);
+    }
+  };
+
+  const handleSaveLink = async () => {
+    if (!selectedAppointment?.id || savingLink) return;
+    try {
+      setSavingLink(true);
+      await api.patch(
+        '/api/appointments/single',
+        { id: selectedAppointment.id, meeting_link: linkInput },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setSelectedAppointment((prev) => ({ ...prev, meeting_link: linkInput || null }));
+      setAppointments((prev) =>
+        prev.map((a) => (a.id === selectedAppointment.id ? { ...a, meeting_link: linkInput || null } : a)),
+      );
+      showToast('Liga guardada');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'No se pudo guardar la liga.', 'error');
+    } finally {
+      setSavingLink(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    const link = selectedAppointment?.meeting_link;
+    if (!link) return;
+    navigator.clipboard.writeText(link).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const exportCSV = () => {
+    const header = 'Nombre,Telefono,Empresa,Email,Interes,Modalidad,Hora,Estatus';
+    const rows = appointments.map((a) =>
+      [
+        `"${a.name || a.user_name || ''}",`,
+        `"${a.phone || ''}",`,
+        `"${a.company || ''}",`,
+        `"${a.email || ''}",`,
+        `"${a.interest || ''}",`,
+        `"${getModeLabel(a.mode, a.meeting_link)}",`,
+        `"${formatTime(a.appointment_at)}",`,
+        `"${STATUS_LABELS[a.status] || a.status || ''}"`,
+      ].join(''),
+    );
+    const csv  = [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const el   = document.createElement('a');
+    el.href     = url;
+    el.download = `citas-${toDateKey(selectedDate)}.csv`;
+    el.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleSaveNotes = async () => {
+    if (!selectedAppointment?.id || savingNotes) return;
+    try {
+      setSavingNotes(true);
+      await api.patch(
+        '/api/appointments/single',
+        { id: selectedAppointment.id, notes: notesInput },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setSelectedAppointment((prev) => ({ ...prev, notes: notesInput }));
+      showToast('Nota guardada');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'No se pudo guardar la nota.', 'error');
+    } finally {
+      setSavingNotes(false);
+    }
+  };
+
+  const filteredAppointments = appointments.filter((a) => {
+    const q = search.toLowerCase();
+    if (!q) return true;
+    return (
+      (a.name || a.user_name || '').toLowerCase().includes(q) ||
+      (a.company || '').toLowerCase().includes(q) ||
+      (a.phone || '').toLowerCase().includes(q)
+    );
+  });
+
   return (
     <div className="appointments-page">
       <section className="appointments-calendar-panel">
@@ -255,6 +393,28 @@ export default function Appointments() {
           <p>{formatDate(selectedDate)}</p>
         </div>
 
+        {!loading && !error && appointments.length > 0 && (
+          <div className="list-toolbar">
+            <div className="list-search">
+              <Search size={14} />
+              <input
+                type="text"
+                placeholder="Buscar por nombre, empresa o tel..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              {search && (
+                <button type="button" className="search-clear" onClick={() => setSearch('')}>
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+            <button type="button" className="list-export-btn" onClick={exportCSV} title="Exportar a CSV">
+              <FileDown size={15} />
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <div className="appointments-state">
             <div className="spinner" />
@@ -268,9 +428,13 @@ export default function Appointments() {
           <div className="appointments-state empty">
             <p>No hay citas agendadas para este dia.</p>
           </div>
+        ) : filteredAppointments.length === 0 ? (
+          <div className="appointments-state empty">
+            <p>No se encontraron citas con esa búsqueda.</p>
+          </div>
         ) : (
           <div className="appointments-list">
-            {appointments.map((appointment) => {
+            {filteredAppointments.map((appointment) => {
               const displayName = appointment.name || appointment.user_name || 'Sin nombre';
               return (
                 <button
@@ -292,7 +456,7 @@ export default function Appointments() {
                     </span>
                   </div>
                   <span className={`appointment-status ${String(appointment.status || '').toLowerCase()}`}>
-                    {appointment.status || 'SCHEDULED'}
+                    {STATUS_LABELS[appointment.status] || appointment.status || 'Programada'}
                   </span>
                 </button>
               );
@@ -320,10 +484,6 @@ export default function Appointments() {
               selectedAppointment && (
                 <div className="appointment-detail-grid">
                   <div className="detail-item">
-                    <span>ID</span>
-                    <strong>#{selectedAppointment.id}</strong>
-                  </div>
-                  <div className="detail-item">
                     <span><UserRound size={14} /> Nombre</span>
                     <strong>{selectedAppointment.name || selectedAppointment.user_name || 'Sin nombre'}</strong>
                   </div>
@@ -343,44 +503,121 @@ export default function Appointments() {
                     <span><FileText size={14} /> Evento</span>
                     <strong>{selectedAppointment.event_name || 'Sin evento'}</strong>
                   </div>
+                  <div className="detail-item">
+                    <span><Monitor size={14} /> Modalidad</span>
+                    <strong>{getModeLabel(selectedAppointment.mode, selectedAppointment.meeting_link)}</strong>
+                  </div>
                   <div className="detail-item wide">
                     <span><BadgeCheck size={14} /> Interes</span>
                     <strong>{selectedAppointment.interest || 'Sin detalle'}</strong>
                   </div>
                   <div className="detail-item">
-                    <span><Monitor size={14} /> Modalidad</span>
-                    <strong>{getModeLabel(selectedAppointment.mode, selectedAppointment.meeting_link)}</strong>
-                  </div>
-                  <div className="detail-item">
                     <span>Fecha de cita</span>
                     <strong>{formatDateTime(selectedAppointment.appointment_at)}</strong>
-                  </div>
-                  <div className="detail-item wide">
-                    <span><LinkIcon size={14} /> Liga de reunion</span>
-                    {selectedAppointment.meeting_link ? (
-                      <a
-                        href={selectedAppointment.meeting_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="meeting-link"
-                      >
-                        {selectedAppointment.meeting_link}
-                      </a>
-                    ) : (
-                      <strong>No disponible</strong>
-                    )}
-                  </div>
-                  <div className="detail-item">
-                    <span>Estatus</span>
-                    <strong>{selectedAppointment.status || 'SCHEDULED'}</strong>
                   </div>
                   <div className="detail-item">
                     <span>Creada</span>
                     <strong>{formatDateTime(selectedAppointment.created_at)}</strong>
                   </div>
-                  <div className="detail-item">
-                    <span>User ID</span>
-                    <strong>{selectedAppointment.user_id || 'No definido'}</strong>
+                  <div className="detail-item wide">
+                    <span>Estatus</span>
+                    <div className="detail-status-section">
+                      <span className={`appointment-status ${String(selectedAppointment.status || 'scheduled').toLowerCase()}`}>
+                        {STATUS_LABELS[selectedAppointment.status] || selectedAppointment.status || 'Programada'}
+                      </span>
+                      <div className="status-actions">
+                        {STATUS_OPTIONS.map(({ value, label }) => (
+                          <button
+                            key={value}
+                            type="button"
+                            className={`status-btn ${value.toLowerCase()} ${selectedAppointment.status === value ? 'active' : ''}`}
+                            onClick={() => handleStatusChange(value)}
+                            disabled={statusSaving || selectedAppointment.status === value}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  {getModeLabel(selectedAppointment.mode, selectedAppointment.meeting_link) === 'Virtual' && (
+                    <div className="detail-item wide">
+                      <span><LinkIcon size={14} /> Liga de reunion virtual</span>
+                      {selectedAppointment.meeting_link && (
+                        <div className="meeting-link-row">
+                          <a
+                            href={selectedAppointment.meeting_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="meeting-link"
+                          >
+                            {selectedAppointment.meeting_link}
+                          </a>
+                          <button
+                            type="button"
+                            className={`icon-btn copy-btn${copied ? ' copied' : ''}`}
+                            onClick={handleCopyLink}
+                            title={copied ? 'Copiado' : 'Copiar liga'}
+                          >
+                            {copied ? <Check size={14} /> : <Copy size={14} />}
+                          </button>
+                          <a
+                            href={selectedAppointment.meeting_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="icon-btn"
+                            title="Abrir en nueva pestaña"
+                          >
+                            <ExternalLink size={14} />
+                          </a>
+                        </div>
+                      )}
+                      <div className="link-editor">
+                        <input
+                          type="url"
+                          className="link-input"
+                          placeholder="https://meet.google.com/..."
+                          value={linkInput}
+                          onChange={(e) => setLinkInput(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="link-save-btn"
+                          onClick={handleSaveLink}
+                          disabled={savingLink || linkInput === (selectedAppointment.meeting_link || '')}
+                        >
+                          {savingLink ? 'Guardando...' : 'Guardar'}
+                        </button>
+                        <button
+                          type="button"
+                          className="link-share-btn"
+                          disabled
+                          title="Próximamente: compartir por correo"
+                        >
+                          <Send size={14} />
+                          Compartir
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <div className="detail-item wide">
+                    <span><StickyNote size={14} /> Notas internas</span>
+                    <textarea
+                      className="notes-textarea"
+                      placeholder="Agrega notas privadas sobre esta cita..."
+                      value={notesInput}
+                      onChange={(e) => setNotesInput(e.target.value)}
+                      rows={3}
+                    />
+                    <button
+                      type="button"
+                      className="link-save-btn"
+                      onClick={handleSaveNotes}
+                      disabled={savingNotes || notesInput === (selectedAppointment.notes || '')}
+                      style={{ alignSelf: 'flex-end', marginTop: '0.35rem' }}
+                    >
+                      {savingNotes ? 'Guardando...' : 'Guardar nota'}
+                    </button>
                   </div>
                 </div>
               )

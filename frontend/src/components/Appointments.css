@@ -347,6 +347,254 @@
   color: var(--color-primary-dark);
 }
 
+/* ── Status actions ── */
+.detail-status-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 0.15rem;
+}
+
+.status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.status-btn {
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  transition: all 0.15s ease;
+}
+
+.status-btn:disabled { cursor: default; }
+
+.status-btn.scheduled { border-color: #a5b4fc; color: #3730a3; }
+.status-btn.scheduled:not(:disabled):hover,
+.status-btn.scheduled.active { background: #e0e7ff; }
+
+.status-btn.completed { border-color: #86efac; color: #166534; }
+.status-btn.completed:not(:disabled):hover,
+.status-btn.completed.active { background: #dcfce7; }
+
+.status-btn.cancelled { border-color: #fca5a5; color: #991b1b; }
+.status-btn.cancelled:not(:disabled):hover,
+.status-btn.cancelled.active { background: #fee2e2; }
+
+.status-btn.no_show { border-color: #fdba74; color: #9a3412; }
+.status-btn.no_show:not(:disabled):hover,
+.status-btn.no_show.active { background: #ffedd5; }
+
+.appointment-status.no_show {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+/* ── Meeting link editor ── */
+.meeting-link-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.meeting-link-row .meeting-link {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-btn {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.icon-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.copy-btn.copied {
+  border-color: #86efac;
+  color: #166534;
+  background: #dcfce7;
+}
+
+.link-editor {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.link-input {
+  flex: 1;
+  min-width: 160px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0 0.65rem;
+  font-size: 0.82rem;
+  color: var(--color-text);
+  background: #fff;
+  outline: none;
+}
+
+.link-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(0, 54, 127, 0.1);
+}
+
+.link-save-btn {
+  height: 32px;
+  padding: 0 0.9rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.link-save-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.link-save-btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.link-share-btn {
+  height: 32px;
+  padding: 0 0.9rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: not-allowed;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
+/* ── Search toolbar ── */
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.7rem;
+}
+
+.list-search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0 0.6rem;
+  background: #fff;
+  color: var(--color-text-secondary);
+}
+
+.list-search:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(0, 54, 127, 0.08);
+}
+
+.list-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.82rem;
+  color: var(--color-text);
+  background: transparent;
+}
+
+.search-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.search-clear:hover {
+  color: var(--color-text);
+}
+
+.list-export-btn {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.list-export-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ── Notes textarea ── */
+.notes-textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.7rem;
+  font-size: 0.84rem;
+  color: var(--color-text);
+  background: #fff;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+  line-height: 1.5;
+  margin-top: 0.25rem;
+}
+
+.notes-textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(0, 54, 127, 0.08);
+}
+
 @media (max-width: 1100px) {
   .appointments-page {
     grid-template-columns: 1fr;

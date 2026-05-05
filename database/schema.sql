@@ -58,7 +58,9 @@ CREATE TABLE IF NOT EXISTS appointments (
     appointment_at DATETIME NOT NULL,
     meeting_link VARCHAR(500) DEFAULT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'SCHEDULED',
+    notes TEXT DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -- For existing databases run: ALTER TABLE appointments ADD COLUMN notes TEXT DEFAULT NULL;
     INDEX idx_appointments_date (appointment_at),
     INDEX idx_appointments_user (user_id),
     CONSTRAINT fk_appointments_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

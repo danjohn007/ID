@@ -1,24 +1,50 @@
 import { useState, useEffect } from 'react';
-import { Images, Users, Upload, ArrowUpRight, Calendar } from 'lucide-react';
+import { Images, Users, Upload, ArrowUpRight, Calendar, CalendarClock, Clock3 } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import './Stats.css';
 
+function toDateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function formatTime(value) {
+  if (!value) return '--:--';
+  return new Date(value).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+}
+
+const STATUS_LABELS = {
+  SCHEDULED: 'Programada',
+  COMPLETED: 'Completada',
+  CANCELLED: 'Cancelada',
+  NO_SHOW:   'No asistió',
+};
+
 export default function Stats({ onNavigate }) {
   const [works, setWorks] = useState([]);
   const [users, setUsers] = useState([]);
+  const [todayAppointments, setTodayAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const { token } = useAuth();
 
   useEffect(() => {
+    const today    = new Date();
+    const dateKey  = toDateKey(today);
+    const monthKey = dateKey.substring(0, 7);
+
     const fetchData = async () => {
       try {
-        const [worksRes, usersRes] = await Promise.all([
+        const [worksRes, usersRes, appRes] = await Promise.all([
           api.get('/api/works', { headers: { Authorization: `Bearer ${token}` } }),
           api.get('/api/users', { headers: { Authorization: `Bearer ${token}` } }),
+          api.get('/api/appointments', {
+            params: { date: dateKey, month: monthKey },
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
         setWorks(worksRes.data.works || []);
         setUsers(usersRes.data.users || []);
+        setTodayAppointments(appRes.data.appointments || []);
       } catch {
         /* ignore */
       } finally {
@@ -36,9 +62,9 @@ export default function Stats({ onNavigate }) {
     );
   }
 
-  const totalImages = works.reduce((sum, w) => sum + (w.images?.length || 0), 0);
-  const recentWorks = works.slice(0, 5);
-  const recentUsers = users.slice(0, 5);
+  const totalImages  = works.reduce((sum, w) => sum + (w.images?.length || 0), 0);
+  const recentWorks  = works.slice(0, 5);
+  const recentUsers  = users.slice(0, 5);
 
   return (
     <div className="stats-page">
@@ -67,6 +93,15 @@ export default function Stats({ onNavigate }) {
           <div className="stat-data">
             <span className="stat-value">{totalImages}</span>
             <span className="stat-label">Images</span>
+          </div>
+          <ArrowUpRight size={16} className="stat-arrow" />
+        </button>
+
+        <button className="stat-card" onClick={() => onNavigate('appointments')}>
+          <div className="stat-icon orange"><CalendarClock size={20} /></div>
+          <div className="stat-data">
+            <span className="stat-value">{todayAppointments.length}</span>
+            <span className="stat-label">Citas hoy</span>
           </div>
           <ArrowUpRight size={16} className="stat-arrow" />
         </button>
@@ -136,7 +171,38 @@ export default function Stats({ onNavigate }) {
             </div>
           )}
         </div>
+
+        <div className="stats-section stats-section-wide">
+          <div className="section-header">
+            <h3>Citas de hoy</h3>
+            <button className="section-link" onClick={() => onNavigate('appointments')}>
+              Ver agenda <ArrowUpRight size={14} />
+            </button>
+          </div>
+          {todayAppointments.length === 0 ? (
+            <p className="empty-text">Sin citas agendadas para hoy</p>
+          ) : (
+            <div className="today-appt-list">
+              {todayAppointments.map((a) => (
+                <div key={a.id} className="today-appt-row">
+                  <div className="today-appt-time">
+                    <Clock3 size={13} />
+                    <span>{formatTime(a.appointment_at)}</span>
+                  </div>
+                  <div className="today-appt-info">
+                    <span className="today-appt-name">{a.name || a.user_name || 'Sin nombre'}</span>
+                    <span className="today-appt-sub">{a.company || a.interest || ''}</span>
+                  </div>
+                  <span className={`today-appt-status appt-${String(a.status || 'scheduled').toLowerCase()}`}>
+                    {STATUS_LABELS[a.status] || 'Programada'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
+
